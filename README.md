@@ -51,5 +51,17 @@ Volvemos al Blob Storage y al contenedor donde enviamos los datos y ahí los pod
 
 Una vez tengamos los datos en nuestro blob storage, procedemos a manipularlos desde DataBricks.
 
+Iniciamos sesión en nuestro Databricks, creamos un clúster y esperamos que inicie. 
+
+
+Una vez creado, creamos un nuevo notebook. En este notebook vamos a crear una referencia a nuestro blob storage de azure y a crear una base de datos .
+
+
+
+
+Para crear un punto de montaje necesitamos los siguientes datos:
+
+
+
 
 
