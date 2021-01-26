@@ -61,6 +61,18 @@ Una vez creado, creamos un nuevo notebook. En este notebook vamos a crear una re
 
 Para crear un punto de montaje necesitamos los siguientes datos:
 
+```
+container = 'your container name'
+storagename = 'your storage name'
+key = 'your azure credential'
+
+dbutils.fs.mount(
+  source = "wasbs://"+container+"@"+storagename+".blob.core.windows.net",
+  mount_point = "/mnt/covid",
+  extra_configs = {"fs.azure.account.key."+storagename+".blob.core.windows.net":""+key+""})
+```
+
+
 
 
 
