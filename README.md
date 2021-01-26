@@ -9,7 +9,7 @@ Tutorial para cargar datos desde una fuente Http a un Blob Storage de Azure, par
 
 ## Objetivos
 1. Crear un Blob Storage y su respectivo contenedor en Azure.  **(Almacenamiento)**
-1. Crear y configurar la copia de datos desde una fuente Http (alojada en los servidores de Google Cloud) a el Blob Storage. **(ETL)**
+1. Crear y configurar la copia de datos desde una fuente Http (alojada en los servidores de Google Cloud) a el Blob Storage con Data Factory. **(ETL)**
 1. Crear un punto de montaje al Blob Storage de Azure desde Databricks y realizar las consultas anteriormente propuestas. **(Procesamiento)**
 1. Consumir los datos alojados en las tablas de Databricks desde PowerBI. **(Visualización)**
 
