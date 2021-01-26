@@ -1,5 +1,18 @@
-# Covid Data Processing
-Tutorial para cargar datos desde una fuente http a un Blob Storage de Azure, para posteriormente ser manipulados desde DataBricks y consumidos con Power Bi.
+# Procesamiento en la nube con Azure y Databricks. ICESI 2021-1 - Maestría en Ciencia de Datos
+
+Tutorial para cargar datos desde una fuente Http a un Blob Storage de Azure, para posteriormente ser manipulados desde DataBricks y consumidos con Power Bi. Se pretende configurar todo el flujo de datos desde una fuente a otra utilizando herramientas cloud y al final, poder responder las siguientes preguntas sobre el COVID-19:
+1. ¿Cuántos casos existen a nivel global?
+1. ¿Cuáles son los paises más afectados?
+1. Identificar las regiones o subregiones más críticas en Estados Unidos.
+1. ¿Cuál es el índice de mortalidad?
+
+
+## Objetivos
+1. Crear un Blob Storage y su respectivo contenedor en Azure.  **(Almacenamiento)**
+1. Crear y configurar la copia de datos desde una fuente Http (alojada en los servidores de Google Cloud) a el Blob Storage. **(ETL)**
+1. Crear un punto de montaje al Blob Storage de Azure desde Databricks y realizar las consultas anteriormente propuestas. **(Procesamiento)**
+1. Consumir los datos alojados en las tablas de Databricks desde PowerBI. **(Visualización)**
+
 
 # Crear grupo de recursos
 Creamos un grupo de recursos en azure para encapsular los servicios que utilicemos. Para ellos, buscamos el servicios **Resurce groups** y damos clic. 
@@ -59,7 +72,7 @@ Una vez creado, creamos un nuevo notebook. En este notebook vamos a crear una re
 
 
 
-Para crear un punto de montaje necesitamos los siguientes datos:
+Para crear un punto de montaje necesitamos ejecutar este código en una casilla de nuestro notebook. Recuerda modificar las variables con las de tu azure. 
 
 ```
 container = 'your container name'
@@ -70,6 +83,68 @@ dbutils.fs.mount(
   source = "wasbs://"+container+"@"+storagename+".blob.core.windows.net",
   mount_point = "/mnt/covid",
   extra_configs = {"fs.azure.account.key."+storagename+".blob.core.windows.net":""+key+""})
+```
+
+Con la siguiente línea de código leemos el dataframe.
+```
+df = spark.read.csv("/mnt/covid/datoscovid", header=True)
+```
+
+
+Con esta línea creamos una tabla temporal, lo que nos permite manipular el dataframe con sentencias SQL.
+```
+table_name = 'covid'
+df.createOrReplaceTempView(table_name)
+```
+
+
+De esta forma creamos un DeltaLake, que es una *** con capacidades de CRUD. 
+```
+archivo = "/mnt/covid/delta/datoscovid/"
+df.write.format("delta").mode("overwrite").option("overwriteSchema","true").save(archivo)
+
+sql = "CREATE TABLE covid USING DELTA LOCATION '/mnt/covid/delta/datoscovid/'"
+spark.sql(sql)
+```
+
+### ¿Cuántos casos existen a nivel global?
+```
+casos_totales = spark.sql("""
+                           SELECT count(1) as Casos 
+                           FROM covid
+                           """)
+# Mostramos el resultado de la consulta
+display(casos_totales)
+
+# Guardamos el resultado en una tabla
+casos_totales.write.saveAsTable('casos_totales')
+```
+
+### ¿Cuáles son las áreas o paises más afectados?
+```
+paises_afectados = sqlContext.sql("""
+                           SELECT country_name, count(1) as Casos 
+                           FROM covid 
+                           GROUP BY country_name 
+                           ORDER BY Casos DESC
+                           """)
+
+display(paises_afectados)
+paises_afectados.write.saveAsTable('paises_afectados')
+```
+
+
+### Identificar los puntos críticos en estados unidos
+```
+puntos_criticos = sqlContext.sql("""
+                           SELECT subregion1_name as subregion, count(1) as Casos 
+                           FROM covid 
+                           WHERE country_code='US' 
+                           GROUP BY subregion 
+                           ORDER BY Casos DESC 
+                           """)
+display(puntos_criticos)
+puntos_criticos.write.saveAsTable('puntos_criticos')
 ```
 
 
